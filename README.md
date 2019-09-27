@@ -6,7 +6,7 @@
 > Clippy lints in your Pull Requests
 
 This GitHub Action executes [`clippy`](https://github.com/rust-lang/rust-clippy)
-and posts all lints as annotations for the pushed commit.
+and posts all lints as annotations for the pushed commit, as in the live example [here](https://github.com/actions-rs/example/pull/2/files).
 
 ![Screenshot](./.github/screenshot.png)
 
@@ -23,7 +23,7 @@ jobs:
   clippy_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1
+      - uses: actions/checkout@v1
       - id: component
         uses: actions-rs/components-nightly@v1
         with:
