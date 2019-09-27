@@ -100,7 +100,11 @@ ${this.stats.help} help`);
             userAgent: USER_AGENT,
         });
         const checkRunId = await this.createCheck(client, options);
-        await this.runUpdateCheck(client, checkRunId, options);
+        if (this.isSuccessCheck()) {
+            await this.successCheck(client, checkRunId, options);
+        } else {
+            await this.runUpdateCheck(client, checkRunId, options);
+        }
 
         return;
     }
@@ -155,6 +159,28 @@ ${this.stats.help} help`);
 
             annotations = this.getBucket();
         }
+
+        return;
+    }
+
+    private async successCheck(client, checkRunId: number, options: CheckOptions): Promise<void> {
+        let req: any = {
+            owner: options.owner,
+            repo: options.repo,
+            name: options.name,
+            check_run_id: checkRunId,
+            status: 'completed',
+            conclusion: this.getConclusion(),
+            completed_at: new Date().toISOString(),
+            output: {
+                title: options.name,
+                summary: this.getSummary(),
+                text: this.getText(options.context),
+            }
+        };
+
+        // TODO: Check for errors
+        await client.checks.update(req);
 
         return;
     }
@@ -221,6 +247,11 @@ ${this.stats.help} help`);
         } else {
             return 'success';
         }
+    }
+
+    private isSuccessCheck(): boolean {
+        return this.stats.ice == 0 && this.stats.error == 0 && this.stats.warning == 0 &&
+            this.stats.note == 0 && this.stats.help == 0;
     }
 
     /// Convert parsed JSON line into the GH annotation object
