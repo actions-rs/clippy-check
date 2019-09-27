@@ -39,24 +39,31 @@ export async function run(actionInput: input.Input): Promise<void> {
         }
     });
 
-    let args: string[] = ['clippy'];
+    // `--message-format=json` should just right after the `cargo clippy`
+    // because usually people are adding the `-- -D warnings` at the end
+    // of arguments and it will mess up the output.
+    let args: string[] = ['clippy', '--message-format=json'];
     if (actionInput.toolchain) {
         args.push(`+${actionInput.toolchain}`);
     }
     args = args.concat(actionInput.args);
-    args.push('--message-format=json');
 
     let runner = new CheckRunner();
-    await program.call(args, {
-        silent: true,
-        ignoreReturnCode: true,
-        failOnStdErr: false,
-        listeners: {
-            stdline: (line) => {
-                runner.tryPush(line);
+    let clippyExitCode: number = 0;
+    try {
+        core.startGroup('Executing cargo clippy (JSON output)');
+        clippyExitCode = await program.call(args, {
+            ignoreReturnCode: true,
+            failOnStdErr: false,
+            listeners: {
+                stdline: (line) => {
+                    runner.tryPush(line);
+                }
             }
-        }
-    });
+        });
+    } finally {
+        core.endGroup();
+    }
 
     await runner.executeCheck({
         token: actionInput.token,
@@ -71,6 +78,10 @@ export async function run(actionInput: input.Input): Promise<void> {
             clippy: clippyVersion,
         }
     });
+
+    if (clippyExitCode !== 0) {
+        throw new Error(`Clippy had exited with the ${clippyExitCode} exit code`);
+    }
 }
 
 async function main(): Promise<void> {

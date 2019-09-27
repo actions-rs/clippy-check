@@ -84,7 +84,6 @@ export class CheckRunner {
                 break;
         }
 
-        console.log(contents);
         this.annotations.push(CheckRunner.makeAnnotation(contents));
     }
 
