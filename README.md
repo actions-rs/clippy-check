@@ -66,3 +66,10 @@ jobs:
 
 For extra details about the `toolchain`, `args` and `use-cross` inputs,
 see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
+
+## Notes
+
+As this Action is using [GitHub Checks API](https://developer.github.com/v3/checks/),
+it will not be able to post clippy annotations from the forked repositories
+(see [token permissions](https://help.github.com/en/articles/virtual-environments-for-github-actions#token-permissions) table).\
+Consider creating workflow file in the original repository instead.
