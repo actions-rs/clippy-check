@@ -1,9 +1,8 @@
-const pkg = require('../package.json');
-
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import * as octokit from "@octokit/rest";
 
+const pkg = require('../package.json');
 import {plural} from './render';
 
 const USER_AGENT = `${pkg.name}/${pkg.version} (${pkg.bugs.url})`;
@@ -99,10 +98,15 @@ ${this.stats.help} help`);
             userAgent: USER_AGENT,
         });
         const checkRunId = await this.createCheck(client, options);
-        if (this.isSuccessCheck()) {
-            await this.successCheck(client, checkRunId, options);
-        } else {
-            await this.runUpdateCheck(client, checkRunId, options);
+        try {
+            if (this.isSuccessCheck()) {
+                await this.successCheck(client, checkRunId, options);
+            } else {
+                await this.runUpdateCheck(client, checkRunId, options);
+            }
+        } catch (error) {
+            await this.cancelCheck(client, checkRunId, options);
+            throw error;
         }
 
         return;
@@ -184,10 +188,33 @@ ${this.stats.help} help`);
         return;
     }
 
+    /// Cancel whole check if some unhandled exception happened.
+    private async cancelCheck(client, checkRunId: number, options: CheckOptions): Promise<void> {
+        let req: any = {
+            owner: options.owner,
+            repo: options.repo,
+            name: options.name,
+            check_run_id: checkRunId,
+            status: 'completed',
+            conclusion: 'cancelled',
+            completed_at: new Date().toISOString(),
+            output: {
+                title: options.name,
+                summary: 'Unhandled error',
+                text: 'Check was cancelled due to unhandled error. Check the Action logs for details.',
+            }
+        };
+
+        // TODO: Check for errors
+        await client.checks.update(req);
+
+        return;
+    }
+
     private getBucket(): Array<octokit.ChecksCreateParamsOutputAnnotations> {
         // TODO: Use slice or smth?
         let annotations: Array<octokit.ChecksCreateParamsOutputAnnotations> = [];
-        while (annotations.length <= 50) {
+        while (annotations.length < 50) {
             const annotation = this.annotations.pop();
             if (annotation) {
                 annotations.push(annotation);
@@ -195,6 +222,8 @@ ${this.stats.help} help`);
                 break;
             }
         }
+
+        core.debug(`Prepared next annotations bucket, ${annotations.length} size`);
 
         return annotations;
     }
