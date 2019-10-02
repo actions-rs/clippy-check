@@ -58,11 +58,13 @@ jobs:
 
 ## Inputs
 
-* `token` (*required*): GitHub secret token
-* `toolchain` - Rust toolchain to use (without the `+` sign, ex. `nightly`);\
-    Override or system default toolchain will be used if omitted.
-* `args` - Arguments for the `cargo clippy` command
-* `use-cross` - Use [`cross`](https://github.com/rust-embedded/cross) instead of `cargo` (default: `false`)
+| Name        | Required | Description                                                                                                                            | Type   | Default |
+| ------------| :------: | ---------------------------------------------------------------------------------------------------------------------------------------| ------ | --------|
+| `token`     | ✓        | GitHub secret token, usually a `${{ secrets.GITHUB_TOKEN }}`                                                                           | string |         |
+| `toolchain` |          | Rust toolchain to use; override or system default toolchain will be used if omitted                                                    | string |         |
+| `args`      |          | Arguments for the `cargo clippy` command                                                                                               | string |         |
+| `use-cross` |          | Use [`cross`](https://github.com/rust-embedded/cross) instead of `cargo`                                                               | bool   | false   |
+
 
 For extra details about the `toolchain`, `args` and `use-cross` inputs,
 see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
