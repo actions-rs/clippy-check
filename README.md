@@ -72,6 +72,6 @@ see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
 ## Notes
 
 As this Action is using [GitHub Checks API](https://developer.github.com/v3/checks/),
-it will not be able to post clippy annotations from the forked repositories
+it will not be able to post `clippy` annotations if you are creating workflow file via PR from the forked repository
 (see [token permissions](https://help.github.com/en/articles/virtual-environments-for-github-actions#token-permissions) table).\
-Consider creating workflow file in the original repository instead.
+Once workflow file will be merged into the origin repository, PR annotations will work as intended.
