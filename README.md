@@ -69,8 +69,12 @@ jobs:
 For extra details about the `toolchain`, `args` and `use-cross` inputs,
 see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
 
-## Notes
+## Limitations
 
 Due to [token permissions](https://help.github.com/en/articles/virtual-environments-for-github-actions#token-permissions),
-this Action **WILL NOT** be able to post `clippy` annotations for Pull Requests from the forked repositories.\
-This is a pretty big problem, which can be solved only by Github itself. Consider this before using this Action.
+this Action **WILL NOT** be able to post `clippy` annotations for Pull Requests from the forked repositories.
+
+This is a pretty big problem, which can be solved only by Github themselves,
+see [#2](https://github.com/actions-rs/clippy-check/issues/2) for details.\
+As a fallback this Action will output all clippy messages into the stdout
+and fail the result correspondingly.

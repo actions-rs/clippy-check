@@ -97,7 +97,37 @@ ${this.stats.help} help`);
         const client = new github.GitHub(options.token, {
             userAgent: USER_AGENT,
         });
-        const checkRunId = await this.createCheck(client, options);
+        let checkRunId: number;
+        try {
+            checkRunId = await this.createCheck(client, options);
+        } catch (error) {
+
+            // `GITHUB_HEAD_REF` is set only for forked repos,
+            // so we could check if it is a fork and not a base repo.
+            if (process.env.GITHUB_HEAD_REF) {
+                core.error(`Unable to create clippy annotations! Reason: ${error}`);
+                core.warning("It seems that this Action is executed from the forked repository.");
+                core.warning(`GitHub Actions are not allowed to create Check annotations, \
+when executed for a forked repos. \
+See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
+                core.info('Posting clippy checks here instead.');
+
+                this.dumpToStdout();
+
+                // So, if there were any errors, we are considering this output
+                // as failed, throwing an error will set a non-zero exit code later
+                if (this.getConclusion() == 'failure') {
+                    throw new Error('Exiting due to clippy errors');
+                } else {
+                    // Otherwise if there were no errors (and we do not care about warnings),
+                    // exiting successfully.
+                    return;
+                }
+            } else {
+                throw error;
+            }
+        }
+
         try {
             if (this.isSuccessCheck()) {
                 await this.successCheck(client, checkRunId, options);
@@ -108,8 +138,6 @@ ${this.stats.help} help`);
             await this.cancelCheck(client, checkRunId, options);
             throw error;
         }
-
-        return;
     }
 
     private async createCheck(client, options: CheckOptions): Promise<number> {
@@ -209,6 +237,12 @@ ${this.stats.help} help`);
         await client.checks.update(req);
 
         return;
+    }
+
+    private dumpToStdout() {
+        for (const annotation of this.annotations) {
+            core.info(annotation.message);
+        }
     }
 
     private getBucket(): Array<octokit.ChecksCreateParamsOutputAnnotations> {
