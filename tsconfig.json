@@ -3,8 +3,7 @@
         "target": "es6",
         "module": "commonjs",
         "allowJs": false,
-        "outDir": "./lib",
-        "rootDir": "./src",
+        "outDir": "dist",
         "strict": true,
         "noImplicitAny": false,
         "noUnusedLocals": true,
@@ -13,8 +12,7 @@
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true
     },
-    "exclude": [
-        "node_modules",
-        "**/*.test.ts"
+    "include": [
+        "src"
     ]
 }
