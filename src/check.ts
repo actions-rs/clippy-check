@@ -97,7 +97,33 @@ ${this.stats.help} help`);
         const client = new github.GitHub(options.token, {
             userAgent: USER_AGENT,
         });
-        const checkRunId = await this.createCheck(client, options);
+        let checkRunId: number;
+        try {
+            checkRunId = await this.createCheck(client, options);
+        } catch (error) {
+            // `GITHUB_HEAD_REF` is set only for forked repos,
+            // so we could check if it is a fork and not a base repo.
+            if (process.env.GITHUB_HEAD_REF) {
+                core.error(`Unable to create clippy annotations! Reason: ${error}`);
+                core.warning("It seems that this Action is executed from the forked repository.");
+                core.warning(`GitHub Actions are not allowed to create Check annotations, \
+when executed for a forked repos. \
+See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
+                core.info('Posting clippy checks here instead.');
+
+                try {
+                    core.startGroup('Clippy output');
+                    this.dumpToStdout();
+                } catch (error) {
+                    core.endGroup();
+                    throw error;
+                }
+                return;
+            } else {
+                throw error;
+            }
+        }
+
         try {
             if (this.isSuccessCheck()) {
                 await this.successCheck(client, checkRunId, options);
@@ -108,8 +134,6 @@ ${this.stats.help} help`);
             await this.cancelCheck(client, checkRunId, options);
             throw error;
         }
-
-        return;
     }
 
     private async createCheck(client, options: CheckOptions): Promise<number> {
@@ -209,6 +233,16 @@ ${this.stats.help} help`);
         await client.checks.update(req);
 
         return;
+    }
+
+    private dumpToStdout() {
+        for (const annotation of this.annotations) {
+            core.info(annotation.message);
+        }
+
+        if (this.annotations.length > 0) {
+            throw new Error('Exiting due to clippy errors');
+        }
     }
 
     private getBucket(): Array<octokit.ChecksCreateParamsOutputAnnotations> {

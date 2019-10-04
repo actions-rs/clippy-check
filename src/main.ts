@@ -85,9 +85,9 @@ export async function run(actionInput: input.Input): Promise<void> {
 }
 
 async function main(): Promise<void> {
-    const actionInput = input.get();
-
     try {
+        const actionInput = input.get();
+
         await run(actionInput);
     } catch (error) {
         core.setFailed(error.message);
