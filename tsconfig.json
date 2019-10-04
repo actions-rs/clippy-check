@@ -1,16 +1,29 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "checkJs": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
         "module": "commonjs",
-        "allowJs": false,
-        "outDir": "dist",
-        "strict": true,
-        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "newLine": "LF",
+        "noEmitOnError": true,
+        "noErrorTruncation": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "noFallthroughCasesInSwitch": true,
-        "esModuleInterop": true
+        "outDir": "dist",
+        "pretty": true,
+        "removeComments": true,
+        "resolveJsonModule": true,
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "suppressImplicitAnyIndexErrors": false,
+        "target": "es2018"
     },
     "include": [
         "src"
