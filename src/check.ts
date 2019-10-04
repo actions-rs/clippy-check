@@ -101,6 +101,7 @@ ${this.stats.help} help`);
         try {
             checkRunId = await this.createCheck(client, options);
         } catch (error) {
+
             // `GITHUB_HEAD_REF` is set only for forked repos,
             // so we could check if it is a fork and not a base repo.
             if (process.env.GITHUB_HEAD_REF) {
@@ -111,14 +112,21 @@ when executed for a forked repos. \
 See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 core.info('Posting clippy checks here instead.');
 
-                try {
-                    core.startGroup('Clippy output');
-                    this.dumpToStdout();
-                } catch (error) {
-                    core.endGroup();
-                    throw error;
+                // `dumpToStdout` will throw an error, if there were any annotations
+                // posted
+                core.startGroup('Clippy output');
+                this.dumpToStdout();
+                core.endGroup();
+
+                // So, if there were any errors, we are considering this output
+                // as failed, throwing an error will set a non-zero exit code later
+                if (this.getConclusion() == 'failure') {
+                    throw new Error('Exiting due to clippy errors');
+                } else {
+                    // Otherwise if there were no errors (and we do not care about warnings),
+                    // exiting successfully.
+                    return;
                 }
-                return;
             } else {
                 throw error;
             }
@@ -238,10 +246,6 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     private dumpToStdout() {
         for (const annotation of this.annotations) {
             core.info(annotation.message);
-        }
-
-        if (this.annotations.length > 0) {
-            throw new Error('Exiting due to clippy errors');
         }
     }
 
