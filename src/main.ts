@@ -23,19 +23,19 @@ export async function run(actionInput: input.Input): Promise<void> {
     await exec.exec('rustc', ['-V'], {
         silent: true,
         listeners: {
-            stdout: (buffer) => rustcVersion = buffer.toString().trim(),
+            stdout: (buffer: Buffer) => rustcVersion = buffer.toString().trim(),
         }
     })
     await program.call(['-V'], {
         silent: true,
         listeners: {
-            stdout: (buffer) => cargoVersion = buffer.toString().trim(),
+            stdout: (buffer: Buffer) => cargoVersion = buffer.toString().trim(),
         }
     });
     await program.call(['clippy', '-V'], {
         silent: true,
         listeners: {
-            stdout: (buffer) => clippyVersion = buffer.toString().trim(),
+            stdout: (buffer: Buffer) => clippyVersion = buffer.toString().trim(),
         }
     });
 
@@ -56,7 +56,7 @@ export async function run(actionInput: input.Input): Promise<void> {
             ignoreReturnCode: true,
             failOnStdErr: false,
             listeners: {
-                stdline: (line) => {
+                stdline: (line: string) => {
                     runner.tryPush(line);
                 }
             }
