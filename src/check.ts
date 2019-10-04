@@ -112,11 +112,7 @@ when executed for a forked repos. \
 See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 core.info('Posting clippy checks here instead.');
 
-                // `dumpToStdout` will throw an error, if there were any annotations
-                // posted
-                core.startGroup('Clippy output');
                 this.dumpToStdout();
-                core.endGroup();
 
                 // So, if there were any errors, we are considering this output
                 // as failed, throwing an error will set a non-zero exit code later
