@@ -7,6 +7,26 @@ import {plural} from './render';
 
 const USER_AGENT = `${pkg.name}/${pkg.version} (${pkg.bugs.url})`;
 
+interface CargoMessage {
+    reason: string,
+    message: {
+        code: string,
+        level: string,
+        message: string,
+        rendered: string,
+        spans: DiagnosticSpan[],
+    },
+}
+
+interface DiagnosticSpan {
+    file_name: string,
+    is_primary: boolean,
+    line_start: number,
+    line_end: number,
+    column_start: number,
+    column_end: number,
+}
+
 interface CheckOptions {
     token: string,
     owner: string,
@@ -45,7 +65,7 @@ export class CheckRunner {
     }
 
     public tryPush(line: string): void {
-        let contents;
+        let contents: CargoMessage;
         try {
             contents = JSON.parse(line);
         } catch (error) {
@@ -140,7 +160,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         }
     }
 
-    private async createCheck(client, options: CheckOptions): Promise<number> {
+    private async createCheck(client: github.GitHub, options: CheckOptions): Promise<number> {
         const response = await client.checks.create({
             owner: options.owner,
             repo: options.repo,
@@ -153,7 +173,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         return response.data.id;
     }
 
-    private async runUpdateCheck(client, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async runUpdateCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
         // Checks API allows only up to 50 annotations per request,
         // should group them into buckets
         let annotations = this.getBucket();
@@ -194,7 +214,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         return;
     }
 
-    private async successCheck(client, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async successCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
         let req: any = {
             owner: options.owner,
             repo: options.repo,
@@ -217,7 +237,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     }
 
     /// Cancel whole check if some unhandled exception happened.
-    private async cancelCheck(client, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async cancelCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
         let req: any = {
             owner: options.owner,
             repo: options.repo,
@@ -284,7 +304,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         return blocks.join(', ');
     }
 
-    private getText(context): string {
+    private getText(context: CheckOptions["context"]): string {
         return `## Results
 
 | Message level           | Amount                |
@@ -319,14 +339,14 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     /// Convert parsed JSON line into the GH annotation object
     ///
     /// https://developer.github.com/v3/checks/runs/#annotations-object
-    static makeAnnotation(contents): octokit.ChecksCreateParamsOutputAnnotations {
-        const primarySpan = contents.message.spans.find((span) => span.is_primary == true);
+    static makeAnnotation(contents: CargoMessage): octokit.ChecksCreateParamsOutputAnnotations {
+        const primarySpan: undefined | DiagnosticSpan = contents.message.spans.find((span) => span.is_primary == true);
         // TODO: Handle it properly
-        if (!primarySpan) {
+        if (null == primarySpan) {
             throw new Error('Unable to find primary span for message');
         }
 
-        let annotation_level;
+        let annotation_level: octokit.ChecksCreateParamsOutputAnnotations["annotation_level"];
         // notice, warning, or failure.
         switch (contents.message.level) {
             case 'help':
