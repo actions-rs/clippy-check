@@ -67,7 +67,7 @@ export async function run(actionInput: input.Input): Promise<void> {
 
     await runner.executeCheck({
         token: actionInput.token,
-        name: 'clippy',
+        name: actionInput.name,
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         head_sha: github.context.sha,
