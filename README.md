@@ -69,6 +69,9 @@ jobs:
 For extra details about the `toolchain`, `args` and `use-cross` inputs,
 see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
 
+**NOTE**: if your workflow contains multiple instances of the `clippy-check` action you will need to give each invocation a unique name, using the `name` property described above.
+Check runs must have a unique name, and this prevents a later check run overriding a previous one within the same workflow.
+
 ## Limitations
 
 Due to [token permissions](https://help.github.com/en/articles/virtual-environments-for-github-actions#token-permissions),
