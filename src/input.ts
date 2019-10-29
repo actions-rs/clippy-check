@@ -12,6 +12,7 @@ export interface Input {
     toolchain?: string,
     args: string[],
     useCross: boolean,
+    name: string,
 }
 
 export function get(): Input {
@@ -21,11 +22,13 @@ export function get(): Input {
         toolchain = toolchain.slice(1);
     }
     const useCross = input.getInputBool('use-cross');
+    const name = input.getInput('name');
 
     return {
         token: input.getInput('token', {required: true}),
         args: args,
         useCross: useCross,
-        toolchain: toolchain || undefined
+        toolchain: toolchain || undefined,
+        name
     }
 }

@@ -18,6 +18,9 @@ inputs:
   use-cross:
     description: Use cross instead of cargo
     default: false
+  name:
+    description: Display name of the created GitHub check. Must be unique across several actions-rs/clippy-check invocations.
+    default: clippy
 
 runs:
   using: 'node12'
