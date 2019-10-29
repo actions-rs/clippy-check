@@ -1,6 +1,6 @@
 {
     "name": "rust-clippy-check",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "private": false,
     "description": "Run clippy and annotate the diff with errors and warnings",
     "main": "dist/index.js",
