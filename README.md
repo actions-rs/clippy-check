@@ -12,8 +12,7 @@ and posts all lints as annotations for the pushed commit, as in the live example
 
 ## Example workflow
 
-This example is utilizing [`components-nightly`](https://github.com/actions-rs/components-nightly)
-and [`toolchain`](https://github.com/actions-rs/toolchain) Actions
+This example is utilizing [`toolchain`](https://github.com/actions-rs/toolchain) Actions
 to install the most recent `nightly` clippy version.
 
 ```yaml
@@ -24,15 +23,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - id: component
-        uses: actions-rs/components-nightly@v1
-        with:
-          component: clippy
       - uses: actions-rs/toolchain@v1
         with:
-            toolchain: ${{ steps.component.outputs.toolchain }}
+            toolchain: nightly
+            components: clippy
             override: true
-      - run: rustup component add clippy
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
