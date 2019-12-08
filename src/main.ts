@@ -39,13 +39,17 @@ export async function run(actionInput: input.Input): Promise<void> {
         }
     });
 
-    // `--message-format=json` should just right after the `cargo clippy`
-    // because usually people are adding the `-- -D warnings` at the end
-    // of arguments and it will mess up the output.
-    let args: string[] = ['clippy', '--message-format=json'];
+    let args: string[] = [];
+    // Toolchain selection MUST go first in any condition
     if (actionInput.toolchain) {
         args.push(`+${actionInput.toolchain}`);
     }
+    args.push('clippy');
+    // `--message-format=json` should just right after the `cargo clippy`
+    // because usually people are adding the `-- -D warnings` at the end
+    // of arguments and it will mess up the output.
+    args.push('--message-format=json');
+
     args = args.concat(actionInput.args);
 
     let runner = new CheckRunner();
