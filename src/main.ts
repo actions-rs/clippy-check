@@ -69,12 +69,17 @@ export async function run(actionInput: input.Input): Promise<void> {
         core.endGroup();
     }
 
+    let sha = github.context.sha;
+    if (github.context.payload.pull_request?.head?.sha) {
+        sha = github.context.payload.pull_request.head.sha;
+    }
+
     await runner.executeCheck({
         token: actionInput.token,
         name: actionInput.name,
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
-        head_sha: github.context.sha,
+        head_sha: sha,
         started_at: startedAt,
         context: {
             rustc: rustcVersion,
