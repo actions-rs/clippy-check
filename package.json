@@ -24,7 +24,7 @@
         "url": "https://github.com/actions-rs/clippy-check/issues"
     },
     "dependencies": {
-        "@actions-rs/core": "0.0.4",
+        "@actions-rs/core": "0.1.3",
         "@actions/core": "^1.1.3",
         "@actions/github": "^1.1.0",
         "@octokit/rest": "^16.35.0",
