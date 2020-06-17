@@ -1,11 +1,12 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import * as octokit from "@octokit/rest";
 
 const pkg = require('../package.json');
 import {plural} from './render';
 
 const USER_AGENT = `${pkg.name}/${pkg.version} (${pkg.bugs.url})`;
+
+type ChecksCreateParamsOutputAnnotations = any;
 
 interface CargoMessage {
     reason: string,
@@ -50,7 +51,7 @@ interface Stats {
 }
 
 export class CheckRunner {
-    private annotations: Array<octokit.ChecksCreateParamsOutputAnnotations>;
+    private annotations: Array<ChecksCreateParamsOutputAnnotations>;
     private stats: Stats;
 
     constructor() {
@@ -114,7 +115,7 @@ ${this.stats.help} help`);
 
         // TODO: Retries
         // TODO: Throttling
-        const client = new github.GitHub(options.token, {
+        const client = github.getOctokit(options.token, {
             userAgent: USER_AGENT,
         });
         let checkRunId: number;
@@ -160,7 +161,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         }
     }
 
-    private async createCheck(client: github.GitHub, options: CheckOptions): Promise<number> {
+    private async createCheck(client: any, options: CheckOptions): Promise<number> {
         const response = await client.checks.create({
             owner: options.owner,
             repo: options.repo,
@@ -173,7 +174,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         return response.data.id;
     }
 
-    private async runUpdateCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async runUpdateCheck(client: any, checkRunId: number, options: CheckOptions): Promise<void> {
         // Checks API allows only up to 50 annotations per request,
         // should group them into buckets
         let annotations = this.getBucket();
@@ -214,7 +215,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         return;
     }
 
-    private async successCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async successCheck(client: any, checkRunId: number, options: CheckOptions): Promise<void> {
         let req: any = {
             owner: options.owner,
             repo: options.repo,
@@ -237,7 +238,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     }
 
     /// Cancel whole check if some unhandled exception happened.
-    private async cancelCheck(client: github.GitHub, checkRunId: number, options: CheckOptions): Promise<void> {
+    private async cancelCheck(client: any, checkRunId: number, options: CheckOptions): Promise<void> {
         let req: any = {
             owner: options.owner,
             repo: options.repo,
@@ -265,9 +266,9 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
         }
     }
 
-    private getBucket(): Array<octokit.ChecksCreateParamsOutputAnnotations> {
+    private getBucket(): Array<ChecksCreateParamsOutputAnnotations> {
         // TODO: Use slice or smth?
-        let annotations: Array<octokit.ChecksCreateParamsOutputAnnotations> = [];
+        let annotations: Array<ChecksCreateParamsOutputAnnotations> = [];
         while (annotations.length < 50) {
             const annotation = this.annotations.pop();
             if (annotation) {
@@ -339,14 +340,14 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     /// Convert parsed JSON line into the GH annotation object
     ///
     /// https://developer.github.com/v3/checks/runs/#annotations-object
-    static makeAnnotation(contents: CargoMessage): octokit.ChecksCreateParamsOutputAnnotations {
+    static makeAnnotation(contents: CargoMessage): ChecksCreateParamsOutputAnnotations {
         const primarySpan: undefined | DiagnosticSpan = contents.message.spans.find((span) => span.is_primary == true);
         // TODO: Handle it properly
         if (null == primarySpan) {
             throw new Error('Unable to find primary span for message');
         }
 
-        let annotation_level: octokit.ChecksCreateParamsOutputAnnotations["annotation_level"];
+        let annotation_level: ChecksCreateParamsOutputAnnotations["annotation_level"];
         // notice, warning, or failure.
         switch (contents.message.level) {
             case 'help':
@@ -361,7 +362,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 break;
         }
 
-        let annotation: octokit.ChecksCreateParamsOutputAnnotations = {
+        let annotation: ChecksCreateParamsOutputAnnotations = {
             path: primarySpan.file_name,
             start_line: primarySpan.line_start,
             end_line: primarySpan.line_end,
