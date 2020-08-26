@@ -21,6 +21,9 @@ inputs:
   name:
     description: Display name of the created GitHub check. Must be unique across several actions-rs/clippy-check invocations.
     default: clippy
+  manifest-path:
+    description: Path of the Cargo.toml to check
+    required: false
 
 runs:
   using: 'node12'
