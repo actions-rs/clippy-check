@@ -51,8 +51,12 @@ export async function run(actionInput: input.Input): Promise<void> {
     args.push('--message-format=json');
 
     args = args.concat(actionInput.args);
+    if (actionInput.manifestPath) {
+        args.concat(["--manifest-path", actionInput.manifestPath])
+    }
 
-    let runner = new CheckRunner();
+
+    let runner = new CheckRunner(actionInput.manifestPath);
     let clippyExitCode: number = 0;
     try {
         core.startGroup('Executing cargo clippy (JSON output)');

@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
+const path = require('path');
 const pkg = require('../package.json');
 import {plural} from './render';
 
@@ -35,6 +36,7 @@ interface CheckOptions {
     name: string,
     head_sha: string,
     started_at: string, // ISO8601
+    manifestPath?: string,
     context: {
         rustc: string,
         cargo: string,
@@ -53,8 +55,10 @@ interface Stats {
 export class CheckRunner {
     private annotations: Array<ChecksCreateParamsOutputAnnotations>;
     private stats: Stats;
+    private manifestPath?: string;
 
-    constructor() {
+    constructor(manifestPath?: string) {
+        this.manifestPath = manifestPath
         this.annotations = [];
         this.stats = {
             ice: 0,
@@ -104,7 +108,7 @@ export class CheckRunner {
                 break;
         }
 
-        this.annotations.push(CheckRunner.makeAnnotation(contents));
+        this.annotations.push(this.makeAnnotation(contents));
     }
 
     public async executeCheck(options: CheckOptions): Promise<void> {
@@ -340,7 +344,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     /// Convert parsed JSON line into the GH annotation object
     ///
     /// https://developer.github.com/v3/checks/runs/#annotations-object
-    static makeAnnotation(contents: CargoMessage): ChecksCreateParamsOutputAnnotations {
+    makeAnnotation(contents: CargoMessage): ChecksCreateParamsOutputAnnotations {
         const primarySpan: undefined | DiagnosticSpan = contents.message.spans.find((span) => span.is_primary == true);
         // TODO: Handle it properly
         if (null == primarySpan) {
@@ -362,8 +366,12 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 break;
         }
 
+        let file_name = primarySpan.file_name;
+        if (this.manifestPath) {
+            file_name = path.join(path.dirname(this.manifestPath), file_name)
+        }
         let annotation: ChecksCreateParamsOutputAnnotations = {
-            path: primarySpan.file_name,
+            path: file_name,
             start_line: primarySpan.line_start,
             end_line: primarySpan.line_end,
             annotation_level: annotation_level,
