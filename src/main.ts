@@ -1,3 +1,4 @@
+// import os from 'os';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
@@ -56,12 +57,24 @@ export async function run(actionInput: input.Input): Promise<void> {
     let clippyExitCode: number = 0;
     try {
         core.startGroup('Executing cargo clippy (JSON output)');
+        const EOL = '\n';
+        let strBuffer = '';
         clippyExitCode = await program.call(args, {
             ignoreReturnCode: true,
             failOnStdErr: false,
             listeners: {
-                stdline: (line: string) => {
-                    runner.tryPush(line);
+                stdout: (data: Buffer) => {
+                    let s = strBuffer + data.toString();
+                    let n = s.indexOf(EOL);
+                    while (n > -1) {
+                        const line = s.substring(0, n);
+                        runner.tryPush(line);
+
+                        // the rest of the string ...
+                        s = s.substring(n + EOL.length);
+                        n = s.indexOf(EOL);
+                    }
+                    strBuffer = s;
                 }
             }
         });
