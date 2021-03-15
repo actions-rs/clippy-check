@@ -30,7 +30,6 @@ jobs:
             override: true
       - uses: actions-rs/clippy-check@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
 ```
 
@@ -47,19 +46,18 @@ jobs:
       - run: rustup component add clippy
       - uses: actions-rs/clippy-check@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
 ```
 
 ## Inputs
 
-| Name        | Required | Description                                                                                                                            | Type   | Default |
-| ------------| :------: | ---------------------------------------------------------------------------------------------------------------------------------------| ------ | --------|
-| `token`     | ✓        | GitHub secret token, usually a `${{ secrets.GITHUB_TOKEN }}`                                                                           | string |         |
-| `toolchain` |          | Rust toolchain to use; override or system default toolchain will be used if omitted                                                    | string |         |
-| `args`      |          | Arguments for the `cargo clippy` command                                                                                               | string |         |
-| `use-cross` |          | Use [`cross`](https://github.com/rust-embedded/cross) instead of `cargo`                                                               | bool   | false   |
-| `name`      |          | Name of the created GitHub check. If running this action multiple times, each run must have a unique name.                             | string | clippy  |
+| Name        | Required | Description                                                                                                | Type   | Default             |
+| ------------| :------: | -----------------------------------------------------------------------------------------------------------| ------ | --------------------|
+| `token`     |          | GitHub secret token, usually a `${{ github.token }}`                                                       | string | ${{ github.token }} |
+| `toolchain` |          | Rust toolchain to use; override or system default toolchain will be used if omitted                        | string |                     |
+| `args`      |          | Arguments for the `cargo clippy` command                                                                   | string |                     |
+| `use-cross` |          | Use [`cross`](https://github.com/rust-embedded/cross) instead of `cargo`                                   | bool   | false               |
+| `name`      |          | Name of the created GitHub check. If running this action multiple times, each run must have a unique name. | string | clippy              |
 
 For extra details about the `toolchain`, `args` and `use-cross` inputs,
 see [`cargo` Action](https://github.com/actions-rs/cargo#inputs) documentation.
