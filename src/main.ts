@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
+import {join as pathJoin} from 'path';
 
 import {Cargo, Cross} from '@actions-rs/core';
 import * as input from './input';
@@ -44,7 +45,9 @@ export async function run(actionInput: input.Input): Promise<void> {
     if (actionInput.toolchain) {
         args.push(`+${actionInput.toolchain}`);
     }
+
     args.push('clippy');
+
     // `--message-format=json` should just right after the `cargo clippy`
     // because usually people are adding the `-- -D warnings` at the end
     // of arguments and it will mess up the output.
@@ -52,7 +55,13 @@ export async function run(actionInput: input.Input): Promise<void> {
 
     args = args.concat(actionInput.args);
 
-    let runner = new CheckRunner();
+    let cwd = undefined;
+
+    if (actionInput.workingDirectory) {
+        cwd = pathJoin(process.cwd(), actionInput.workingDirectory);
+    }
+
+    let runner = new CheckRunner(actionInput.workingDirectory);
     let clippyExitCode: number = 0;
     try {
         core.startGroup('Executing cargo clippy (JSON output)');
@@ -63,7 +72,8 @@ export async function run(actionInput: input.Input): Promise<void> {
                 stdline: (line: string) => {
                     runner.tryPush(line);
                 }
-            }
+            },
+            cwd
         });
     } finally {
         core.endGroup();

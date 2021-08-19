@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import {join as pathJoin} from 'path';
 
 const pkg = require('../package.json');
 import {plural} from './render';
@@ -53,8 +54,10 @@ interface Stats {
 export class CheckRunner {
     private annotations: Array<ChecksCreateParamsOutputAnnotations>;
     private stats: Stats;
+    private workingDirectory?: string;
 
-    constructor() {
+    constructor(workingDirectory: string | undefined) {
+        this.workingDirectory = workingDirectory;
         this.annotations = [];
         this.stats = {
             ice: 0,
@@ -104,7 +107,7 @@ export class CheckRunner {
                 break;
         }
 
-        this.annotations.push(CheckRunner.makeAnnotation(contents));
+        this.annotations.push(this.makeAnnotation(contents));
     }
 
     public async executeCheck(options: CheckOptions): Promise<void> {
@@ -340,7 +343,7 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
     /// Convert parsed JSON line into the GH annotation object
     ///
     /// https://developer.github.com/v3/checks/runs/#annotations-object
-    static makeAnnotation(contents: CargoMessage): ChecksCreateParamsOutputAnnotations {
+    private makeAnnotation(contents: CargoMessage): ChecksCreateParamsOutputAnnotations {
         const primarySpan: undefined | DiagnosticSpan = contents.message.spans.find((span) => span.is_primary == true);
         // TODO: Handle it properly
         if (null == primarySpan) {
@@ -362,8 +365,14 @@ See https://github.com/actions-rs/clippy-check/issues/2 for details.`);
                 break;
         }
 
+        let path = primarySpan.file_name;
+
+        if(this.workingDirectory) {
+            path = pathJoin(this.workingDirectory, path);
+        }
+
         let annotation: ChecksCreateParamsOutputAnnotations = {
-            path: primarySpan.file_name,
+            path,
             start_line: primarySpan.line_start,
             end_line: primarySpan.line_end,
             annotation_level: annotation_level,
