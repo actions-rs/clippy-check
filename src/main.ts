@@ -2,14 +2,16 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 
-import {Cargo, Cross} from '@actions-rs/core';
+import { Cargo, Cross } from '@actions-rs/core';
 import * as input from './input';
-import {CheckRunner} from './check';
+import { OutputParser as OutputParser } from './outputParser';
+import { Reporter } from './reporter';
+import { info } from 'console';
 
 export async function run(actionInput: input.Input): Promise<void> {
     const startedAt = new Date().toISOString();
 
-    let program;
+    let program: Cargo | Cross;
     if (actionInput.useCross) {
         program = await Cross.getOrInstall();
     } else {
@@ -52,8 +54,10 @@ export async function run(actionInput: input.Input): Promise<void> {
 
     args = args.concat(actionInput.args);
 
-    let runner = new CheckRunner();
+    let outputParser = new OutputParser();
+
     let clippyExitCode: number = 0;
+
     try {
         core.startGroup('Executing cargo clippy (JSON output)');
         clippyExitCode = await program.call(args, {
@@ -61,7 +65,7 @@ export async function run(actionInput: input.Input): Promise<void> {
             failOnStdErr: false,
             listeners: {
                 stdline: (line: string) => {
-                    runner.tryPush(line);
+                    outputParser.tryParseClippyLine(line);
                 }
             }
         });
@@ -74,19 +78,9 @@ export async function run(actionInput: input.Input): Promise<void> {
         sha = github.context.payload.pull_request.head.sha;
     }
 
-    await runner.executeCheck({
-        token: actionInput.token,
-        name: actionInput.name,
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        head_sha: sha,
-        started_at: startedAt,
-        context: {
-            rustc: rustcVersion,
-            cargo: cargoVersion,
-            clippy: clippyVersion,
-        }
-    });
+    info(`${startedAt}, ${rustcVersion}, ${cargoVersion}, ${clippyVersion}, ${sha}`);
+
+    await (new Reporter()).report(outputParser.stats, outputParser.annotations);
 
     if (clippyExitCode !== 0) {
         throw new Error(`Clippy had exited with the ${clippyExitCode} exit code`);
