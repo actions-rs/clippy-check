@@ -9,11 +9,11 @@ import {
 } from "./schema";
 
 export class OutputParser {
-    private _annotations: AnnotationWithMessageAndLevel[];
+    private _uniqueAnnotations: Map<string, AnnotationWithMessageAndLevel>;
     private _stats: Stats;
 
     constructor() {
-        this._annotations = [];
+        this._uniqueAnnotations = new Map();
         this._stats = {
             ice: 0,
             error: 0,
@@ -28,7 +28,7 @@ export class OutputParser {
     }
 
     get annotations(): AnnotationWithMessageAndLevel[] {
-        return this._annotations;
+        return [...this._uniqueAnnotations.values()];
     }
 
     public tryParseClippyLine(line: string): void {
@@ -40,7 +40,7 @@ export class OutputParser {
             return;
         }
 
-        if (contents.reason != "compiler-message") {
+        if (contents.reason !== "compiler-message") {
             core.debug(
                 `Unexpected reason field, ignoring it: ${contents.reason}`
             );
@@ -49,6 +49,13 @@ export class OutputParser {
 
         if (contents.message.code === null) {
             core.debug("Message code is missing, ignoring it");
+            return;
+        }
+
+        let parsedAnnotation = OutputParser.makeAnnotation(contents);
+        let key = JSON.stringify(parsedAnnotation);
+
+        if (this._uniqueAnnotations.has(key)) {
             return;
         }
 
@@ -72,7 +79,7 @@ export class OutputParser {
                 break;
         }
 
-        this._annotations.push(OutputParser.makeAnnotation(contents));
+        this._uniqueAnnotations.set(key, parsedAnnotation);
     }
 
     static parseLevel(level: String): AnnotationLevel {
