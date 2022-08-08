@@ -21,6 +21,8 @@ name: Clippy check
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
@@ -42,6 +44,8 @@ name: Clippy check
 jobs:
   clippy_check:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     steps:
       - uses: actions/checkout@v1
       - run: rustup component add clippy
