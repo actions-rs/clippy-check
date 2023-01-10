@@ -9,6 +9,7 @@ inputs:
   token:
     description: GitHub token
     required: true
+    default: ${{ github.token }}
   toolchain:
     description: Toolchain to use (without the `+` sign, ex. `nightly`)
     required: false
